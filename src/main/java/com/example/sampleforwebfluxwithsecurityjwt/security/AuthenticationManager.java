@@ -1,7 +1,6 @@
 package com.example.sampleforwebfluxwithsecurityjwt.security;
 
-import com.example.sampleforwebfluxwithsecurityjwt.domain.Role;
-import io.jsonwebtoken.Claims;
+import com.example.sampleforwebfluxwithsecurityjwt.exception.InvalidAuthTokenException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -11,6 +10,7 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,28 +25,26 @@ public class AuthenticationManager implements ReactiveAuthenticationManager {
 
     @Override
     public Mono<Authentication> authenticate(Authentication authentication) {
-        String authToken = authentication.getCredentials().toString();
+        final String authorityToken = authentication.getCredentials().toString();
+        return jwtUtil.validateToken(authorityToken)
+                .switchIfEmpty(Mono.error(new InvalidAuthTokenException(authorityToken)))
+                .flatMap(isValidToken -> {
+                    if (!isValidToken)
+                        return Mono.error(new InvalidAuthTokenException(authorityToken));
 
-        String username;
-        try {
-            username = jwtUtil.getUsernameFromToken(authToken);
-        } catch (Exception e) {
-            username = null;
-        }
-        if (username != null && jwtUtil.validateToken(authToken)) {
-            Claims claims = jwtUtil.getAllClaimsFromToken(authToken);
-            List roleList = claims.get("role", List.class);
-            List<Role> roles = new ArrayList<>();
-            for (Object role : roleList) {
-                roles.add(Role.valueOf((String) role));
-            }
-            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                    username, null,
-                    roles.stream().map(authority -> new SimpleGrantedAuthority(authority.name())).collect(Collectors.toList())
-            );
-            return Mono.just(auth);
-        }
+                    return jwtUtil.getUsernameFromToken(authorityToken)
+                            .switchIfEmpty(Mono.error(new InvalidAuthTokenException(authorityToken)))
+                            .flatMap(username -> jwtUtil.getClaimsFromToken(authorityToken)
+                                    .flatMap(claims -> {
+                                        final List grantedAuthorityList = claims.get(JWTUtil.CLAIM_KEY_AUTHORITIES, List.class);
+                                        final List<String> roleList = new ArrayList<>();
+                                        for (Object grantedAuthority : grantedAuthorityList)
+                                            roleList.add((String) ((LinkedHashMap) grantedAuthority).get("authority"));
 
-        return Mono.empty();
+                                        return Mono.just(new UsernamePasswordAuthenticationToken(username, null,
+                                                roleList.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList())));
+                                    })
+                            );
+                });
     }
 }

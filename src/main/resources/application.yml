@@ -14,11 +14,6 @@ logging:
   level:
     org.springframework.data.mongodb: DEBUG
 
-springbootwebfluxjjwt:
-  password:
-    encoder:
-      secret: mysecret
-      iteration: 33
-      keyLength: 256
+jwt:
   secret: mysecret
-  expiration: 28800
+  expiration: 3600000

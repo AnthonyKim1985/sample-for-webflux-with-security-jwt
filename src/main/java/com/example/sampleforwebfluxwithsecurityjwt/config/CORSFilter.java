@@ -1,4 +1,4 @@
-package com.example.sampleforwebfluxwithsecurityjwt.security;
+package com.example.sampleforwebfluxwithsecurityjwt.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.config.CorsRegistry;
