@@ -29,7 +29,8 @@ public class SecurityConfig {
     private final SecurityContextRepository securityContextRepository;
 
     @Autowired
-    public SecurityConfig(AuthenticationManager authenticationManager, SecurityContextRepository securityContextRepository) {
+    public SecurityConfig(AuthenticationManager authenticationManager,
+                          SecurityContextRepository securityContextRepository) {
         this.authenticationManager = authenticationManager;
         this.securityContextRepository = securityContextRepository;
     }

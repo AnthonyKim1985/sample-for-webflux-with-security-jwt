@@ -17,11 +17,14 @@ apply plugin: 'io.spring.dependency-management'
 apply plugin: 'war'
 
 group = 'com.example'
-version = '0.0.1-SNAPSHOT'
+version = '1.0.0.RELEASE'
 sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
+    maven {
+        url 'http://oss.jfrog.org/artifactory/oss-snapshot-local/'
+    }
 }
 
 configurations {
@@ -31,20 +34,27 @@ configurations {
 dependencies {
     implementation('org.springframework.boot:spring-boot-starter-data-mongodb-reactive')
     implementation('org.springframework.boot:spring-boot-starter-security')
+    implementation('org.springframework.boot:spring-boot-starter-webflux')
     implementation('org.springframework.boot:spring-boot-starter-web') {
         exclude group: 'org.apache.tomcat.embed', module: 'tomcat-embed-el'
         exclude group: 'org.apache.tomcat.embed', module: 'tomcat-embed-core'
         exclude group: 'org.apache.tomcat.embed', module: 'tomcat-embed-websocket'
     }
-    implementation('org.springframework.boot:spring-boot-starter-webflux')
     runtimeOnly('org.springframework.boot:spring-boot-devtools')
     compileOnly('org.projectlombok:lombok')
     testImplementation('org.springframework.boot:spring-boot-starter-test')
     testImplementation('io.projectreactor:reactor-test')
     testImplementation('org.springframework.security:spring-security-test')
 
-    implementation('commons-codec:commons-codec:1.11')
-    implementation('org.glassfish:javax.el:3.0.0')
+    /*
+     * Swagger dependencies
+     */
+    implementation('io.springfox:springfox-swagger2:3.0.0-SNAPSHOT')
+    implementation('io.springfox:springfox-spring-webflux:3.0.0-SNAPSHOT')
+    implementation('io.springfox:springfox-swagger-ui:3.0.0-SNAPSHOT')
 
+    /*
+     * JSON Web Token dependency
+     */
     implementation('io.jsonwebtoken:jjwt:0.9.1')
 }
